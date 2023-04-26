@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 from posydon.grids.psygrid import PSyGrid
 
 # read in the file
-grid = PSyGrid("z_low_wrlof_combined2.h5")
+grid = PSyGrid("nojdot_noomegalimit1_1.h5")
 #m_COs = (10**np.linspace(np.log10(0.1), np.log10(0.9), 10)) #initial m2 values
-m_COs = [0.9, 1.0, 1.1]
+m_COs = [1.1]
 
 # getting the index number for all crashed runs in the whole grid
 IC_vals = [grid[i].final_values['interpolation_class']
@@ -47,7 +47,8 @@ for elems in no_MT_index:
     m1_all = grid[elems].binary_history['star_1_mass'][0]
     m2_all = grid[elems].binary_history['star_2_mass'][0]
     p_all = grid[elems].binary_history['period_days'][0]
-    f3.append([elems, m1_all, m2_all, p_all, mdot_all])
+    m2final = grid[elems].final_values['star_2_mass']
+    f3.append([elems, m1_all, m2_all, p_all, mdot_all, m2final])
 f3 = np.array(f3)
 f3 = np.transpose(f3)
 
@@ -94,7 +95,15 @@ for m_CO in m_COs:
     ind2 = np.where((m_CO-0.02 < f2[2]) & (m_CO+0.02 > f2[2]))[0]
     ind3 = np.where((m_CO-0.02 < f3[2]) & (m_CO+0.02 > f3[2]))[0]
     ind4 = np.where((m_CO-0.02 < f4[2]) & (m_CO+0.02 > f4[2]))[0]
-    
+
+    wind = []
+    nomt = []
+    for i in range(len(f3[5][ind3])):
+        if (f3[5][ind3][i] - f3[2][ind3][i]) > 0.01:
+            wind.append([f3[1][ind3][i], f3[3][ind3][i]])
+        else:
+            nomt.append([f3[1][ind3][i], f3[3][ind3][i]])
+
     #tpagb = []
     mintimestep = []
     m6 = []
@@ -117,12 +126,18 @@ for m_CO in m_COs:
     m6 = np.transpose(m6)
     nc = np.array(nc)
     nc = np.transpose(nc)
+    wind = np.array(wind)
+    wind = np.transpose(wind)
+    nomt = np.array(nomt)
+    nomt = np.transpose(nomt)
 
-    plt.figure(figsize=(5,8))
+    plt.figure(figsize=(2.5,4), dpi=300)
 
     plt.scatter(np.log10(f1[1][ind1]), np.log10(f1[3][ind1]), marker='s', s=30, color='tab:blue', label='Stable RLOF')
     plt.scatter(np.log10(f2[1][ind2]), np.log10(f2[3][ind2]), marker='D', s=30, color='tab:orange', label='Unstable RLOF')
-    plt.scatter(np.log10(f3[1][ind3]), np.log10(f3[3][ind3]), marker='s', s=30, color='lightgray', label='No RLOF')
+    plt.scatter(np.log10(nomt[0]), np.log10(nomt[1]), marker='s', s=30, color='lightgray', label='No MT')
+    try: plt.scatter(np.log10(wind[0]), np.log10(wind[1]), marker='s', s=30, color='tab:green', label='Wind MT')
+    except: pass
     #try: plt.scatter(np.log10(tpagb[0]), np.log10(tpagb[1]), marker='*', s=40, color='tab:green', label='Reached TPAGB')
     #except: pass
     #try: plt.scatter(np.log10(mintimestep[0]), np.log10(mintimestep[1]), marker='*', s=20, color='gold', label='Min timestep limit')
@@ -139,7 +154,7 @@ for m_CO in m_COs:
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     #plt.legend()
 
-    plt.savefig('z_low_plots/z_low_wrlof_m_CO_%.3s_m2_endcondition.png'%m_CO, bbox_inches='tight')
+    plt.savefig('nojdot_noomegalim_m_CO_%.3s_m2_endcondition.png'%m_CO, bbox_inches='tight')
     plt.show()
     notconverged += len(nc[0])
     #tpagb_count += len(tpagb[0])

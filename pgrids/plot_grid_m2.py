@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from posydon.grids.psygrid import PSyGrid
 
 # read in the file
-grid = PSyGrid("z_low_wrlof_0_9.h5")
-m_COs = [0.9] #(10**np.linspace(np.log10(0.1), np.log10(0.9), 10)) #initial m2 values
+grid = PSyGrid("nojdot_noomegalimit1_1.h5")
+m_COs = [1.1] #(10**np.linspace(np.log10(0.1), np.log10(0.9), 10)) #initial m2 values
 
 # getting the index number for all crashed runs in the whole grid
 IC_vals = [grid[i].final_values['interpolation_class']
@@ -28,9 +28,22 @@ for elems in stable_MT_index:
     p_all = grid[elems].binary_history['period_days'][0]
     wcrit = grid[elems].final_values['S2_surf_avg_omega_div_omega_crit']
     m2_final = grid[elems].final_values['star_2_mass']
-    f1.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, m2_final])
+    m2 = grid[elems].binary_history['star_2_mass']
+    deltam2 = max(m2)-m2_all
+    maxm2 = max(grid[elems].binary_history['star_2_mass'])
+    f1.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, maxm2, deltam2])
 f1 = np.array(f1)
 f1 = np.transpose(f1)
+
+"""
+print(np.mean(f1[7]))
+plt.rcParams["mathtext.fontset"] = 'cm'
+plt.hist(f1[7])
+plt.xlabel(r'$\Delta M_2$ $(M_\odot)$', fontsize=14)
+plt.title(r'Mass increase for accretor: RLOF island (avg=0.038)',fontsize=14)
+plt.savefig('avgm2_rlof.png')
+plt.show()
+"""
 
 for elems in unstable_MT_index:
     mdot_all = grid[elems].binary_history['lg_mtransfer_rate'][-1]
@@ -40,7 +53,8 @@ for elems in unstable_MT_index:
     p_all = grid[elems].binary_history['period_days'][0]
     wcrit = grid[elems].final_values['S2_surf_avg_omega_div_omega_crit']
     m2_final = grid[elems].final_values['star_2_mass']
-    f2.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, m2_final])
+    maxm2 = max(grid[elems].binary_history['star_2_mass'])
+    f2.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, maxm2])
 f2 = np.array(f2)
 f2 = np.transpose(f2)
 
@@ -52,9 +66,26 @@ for elems in no_MT_index:
     p_all = grid[elems].binary_history['period_days'][0]
     wcrit = grid[elems].final_values['S2_surf_avg_omega_div_omega_crit']
     m2_final = grid[elems].final_values['star_2_mass']
-    f3.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, m2_final])
+    m2 = grid[elems].binary_history['star_2_mass']
+    if (m2_final-m2_all)>0.01:
+        deltam2 = max(m2)-m2_all
+    else:
+        deltam2 = 999
+    maxm2 = max(grid[elems].binary_history['star_2_mass'])
+    f3.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, maxm2,deltam2])
 f3 = np.array(f3)
 f3 = np.transpose(f3)
+
+"""
+dm2 = [x for x in f3[7] if x!= 999]
+print(np.mean(dm2))
+plt.rcParams["mathtext.fontset"] = 'cm'
+plt.hist(dm2)
+plt.xlabel(r'$\Delta M_2$ $(M_\odot)$',fontsize=14)
+plt.title(r'Mass increase for accretor: wind MT island (avg=0.037)', fontsize=14)
+plt.savefig('avgm2_wrlof.png')
+plt.show()
+"""
 
 for elems in notconverged_MT_index:
     mdot_all = grid[elems].binary_history['lg_mtransfer_rate'][-1]
@@ -64,7 +95,8 @@ for elems in notconverged_MT_index:
     p_all = grid[elems].binary_history['period_days'][0]
     wcrit = grid[elems].final_values['S2_surf_avg_omega_div_omega_crit']
     m2_final = grid[elems].final_values['star_2_mass']
-    f4.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, m2_final])
+    maxm2 = max(grid[elems].binary_history['star_2_mass'])
+    f4.append([elems, m1_all, m2_all, p_all, mdot_all, wcrit, maxm2])
 
 """
 #For finding not converged runs due to TPAGB
@@ -119,16 +151,16 @@ for m_CO in m_COs:
         #minm2 = min(min(f3[6][ind3]), min(tpagb[2]))
         #maxm2 = max(max(f3[6][ind3]), max(tpagb[2]))
         if m_CO == 0.9:
-            j = 0.05
+            j =  0.35 #0.07
         elif m_CO == 1.0: 
-            j = 0.05
+            j =  0.35 #0.06
         else:
-            j = 0.04
+            j =  0.35 #0.04; 0.35 for all for no jdot
         minm2 = m_CO - 0.01
         maxm2 = m_CO + j 
     except: continue
 
-    plt.figure(figsize=(5,10))
+    plt.figure(figsize=(2.5,5), dpi=300)
 
     plt.scatter(np.log10(f1[1][ind1]), np.log10(f1[3][ind1]), c= f1[6][ind1], vmin = minm2, vmax = maxm2, marker='s', s=30, cmap='viridis', label='Reached end life')
     plt.scatter(np.log10(f2[1][ind2]), np.log10(f2[3][ind2]), c='black', marker='D', s=15, label='Unstable RLOF')
@@ -147,11 +179,11 @@ for m_CO in m_COs:
     plt.xlabel(r'$\log_{10}(M_1/M_\odot)$', fontsize=14)
     plt.ylabel(r'$\log_{10}(P_\mathrm{orb}/\mathrm{days})$', fontsize=14)
     plt.title(r'$M_2 = %.4s M_\odot$'%m_CO, fontsize=16)
-    plt.colorbar(orientation='horizontal', label=r'$\mathrm{Final}$ $ M_2$')
+    plt.colorbar(orientation='horizontal', label=r'$\mathrm{max}$ $ M_2$')
     plt.clim(minm2, maxm2)
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     #plt.legend()
 
-    plt.savefig('z_low_plots/z_low_wrlof_m_CO_%.3s_m2_finalm2.png'%m_CO, bbox_inches='tight')
+    plt.savefig('nojdot_noomegalim_m_CO_%.3s_m2_finalm2.png'%m_CO, bbox_inches='tight')
     plt.show()
     notconverged += len(nc)

@@ -7,9 +7,9 @@ from matplotlib import gridspec
 Plots HR diagram (log L vs log T_eff) and Mdot vs orbital period (and any additional plots) for a binary model.
 """
 
-h = mr.MesaData('LOGS1_nowrlof/history.data')
-h2 = mr.MesaData('binary_history_nowrlof.data')
-h3 = mr.MesaData('LOGS2_nowrlof/history.data')
+h = mr.MesaData('LOGS1_wrlof/history.data')
+h2 = mr.MesaData('binary_history_wrlof.data')
+h3 = mr.MesaData('LOGS2_wrlof/history.data')
 
 print(h2.star_1_mass[0], h2.star_2_mass[0], h2.period_days[0])
 
@@ -40,6 +40,26 @@ for i in nomt2:
         split2 = 1
 split2 = np.where(nomt2 == split2)[0][0]
 
+try:
+    A = np.where(h3.log_L > 0.45)[0]
+    A = np.where(h3.log_Teff == min(h3.log_Teff[A]))[0]
+
+    B = np.where((h3.log_L > 0.3) & (3.785 < h3.log_Teff) & (h3.log_Teff < 3.79))[0]
+    B = np.where(h3.log_L == min(h3.log_L[B]))[0]
+
+    C = np.where(h3.log_L > 0.6)[0]
+    C = np.where(h3.log_Teff == min(h3.log_Teff[C]))[0]
+
+    D = np.where(h3.log_Teff == max(h3.log_Teff))[0]
+except: pass
+
+print(10**(h.log_Teff[0]), 10**(h.log_L[0]))
+print(10**(h3.log_Teff[0]), 10**(h3.log_L[0]))
+print(10**(h3.log_Teff[-1]), 10**(h3.log_L[-1]))
+print(h.star_age[-1], h3.star_age[-1])
+print(h2.star_1_mass[0], h2.star_1_mass[-1], (h2.star_1_mass[-1]- h2.star_1_mass[0]))
+print(h2.star_2_mass[0], h2.star_2_mass[-1], (h2.star_2_mass[-1]- h2.star_2_mass[0]))
+
 plt.figure(figsize=(8,6), dpi=100)
 plt.rcParams["mathtext.fontset"] = 'cm'
 plt.plot(h.log_Teff[nomt[:split]], h.log_L[nomt[:split]], label=r'$\mathrm{Donor}$', color='tab:blue')
@@ -49,8 +69,17 @@ plt.plot(h3.log_Teff[nomt2[:split2]], h3.log_L[nomt2[:split2]], label=r'$\mathrm
 plt.plot(h3.log_Teff[nomt2[split2:]], h3.log_L[nomt2[split2:]], color='tab:orange')
 plt.plot(h3.log_Teff[mt2], h3.log_L[mt2], label=r'$\mathrm{Accretor, MT}$', linestyle='dashed', color='tab:orange')
 
-plt.xlabel(r'$\log$ $T_\mathrm{eff}$ $(\mathrm{K})$', fontsize=25)
-plt.ylabel(r'$\log$ $L$ $(L_\odot)$', fontsize=25)
+try:
+    pointsx = [h3.log_Teff[A], h3.log_Teff[B], h3.log_Teff[C], h3.log_Teff[D]]
+    pointsy = [h3.log_L[A], h3.log_L[B], h3.log_L[C], h3.log_L[D]]
+    labels = ['D', 'C', 'B', 'A']
+    plt.plot(pointsx, pointsy, '.', color='black')
+    for i, txt in enumerate(pointsx):
+        plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+except: pass
+
+plt.xlabel(r'$\log$ $T_\mathrm{eff}$ $(\mathrm{K})$', fontsize=14)
+plt.ylabel(r'$\log$ $L$ $(L_\odot)$', fontsize=14)
 plt.xlim(5.3, 3.2)
 plt.legend()
 plt.savefig('hr.png', bbox_inches='tight')
@@ -71,6 +100,13 @@ plt.figure(figsize=(8,6), dpi=100)
 plt.rcParams["mathtext.fontset"] = 'cm'
 plt.plot(h2.period_days, np.log10(h2.WRLOF_efficiency))
 
+pointsx = [h2.period_days[A], h2.period_days[B], h2.period_days[C], h2.period_days[D]]
+pointsy = [np.log10(h2.WRLOF_efficiency[A]), np.log10(h2.WRLOF_efficiency[B]), np.log10(h2.WRLOF_efficiency[C]), np.log10(h2.WRLOF_efficiency[D])]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+
 plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
 plt.ylabel(r'$\log_{10}$ $\beta_\mathrm{acc, WRLOF}$',fontsize=14)
 plt.savefig('wrlofefficiency.png', bbox_inched='tight')
@@ -85,9 +121,23 @@ plt.plot(h2.period_days, h2.lg_wind_mdot_1, label=r'$\dot{M}_\mathrm{d, wind}$',
 plt.plot(h2.period_days, h2.lg_wind_mdot_2, label=r'$\dot{M}_\mathrm{a, wind}$', linestyle='dashed', color='tab:green')
 #plt.plot(h2.period_days, h2.lg_mtransfer_rate, label='RLOF')
 
+pointsx = [h2.period_days[A], h2.period_days[B], h2.period_days[C], h2.period_days[D]]
+pointsy = [h2.lg_mstar_dot_2[A], h2.lg_mstar_dot_2[B], h2.lg_mstar_dot_2[C], h2.lg_mstar_dot_2[D]]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
 
-plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=25)
-plt.ylabel(r'$\log_{10}$ $\dot{M}$ $(M_\odot/\mathrm{year})$', fontsize=25)
+pointsy = [h2.lg_wind_mdot_2[A], h2.lg_wind_mdot_2[B], h2.lg_wind_mdot_2[C], h2.lg_wind_mdot_2[D]]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+
+
+
+plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
+plt.ylabel(r'$\log_{10}$ $\dot{M}$ $(M_\odot/\mathrm{year})$', fontsize=14)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.12), ncol=4)
 plt.savefig('mdotvsp.png', bbox_inches='tight')
 plt.show()
@@ -143,7 +193,7 @@ plt.ylabel('Radius (Rsun)')
 plt.legend()
 plt.show()
 """
-#Rotational speed/critical vs orbital period
+#Rotational speed vs orbital period
 plt.figure(figsize=(8,6), dpi=100)
 plt.rcParams["mathtext.fontset"] = 'cm'
 plt.plot(h2.period_days, h.surf_avg_omega_div_omega_crit, label='Donor')
@@ -154,17 +204,6 @@ plt.legend()
 plt.savefig('wcrit.png', bbox_inches='tight')
 plt.show()
 
-#Rotational speed vs orbital period
-plt.figure(figsize=(8,6), dpi=100)
-plt.rcParams["mathtext.fontset"] = 'cm'
-plt.plot(h2.period_days, h.surf_avg_omega, label='Donor')
-plt.plot(h2.period_days, h3.surf_avg_omega, label='Accretor')
-plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
-plt.ylabel(r'$\omega$', fontsize=14)
-plt.legend()
-plt.savefig('omega.png', bbox_inches='tight')
-plt.show()
-
 #R_RL, R_star vs time
 fig, ax1 = plt.subplots(figsize=(8, 6), dpi=100)
 ax2 = ax1.twinx()
@@ -173,6 +212,25 @@ ax1.plot(h2.period_days, np.log10(h2.rl_1), label=r'$R_{L,1}$', linestyle='dashe
 ax1.plot(h2.period_days, np.log10(h2.star_1_radius), label=r'$R_1$', color='tab:blue')
 ax2.plot(h2.period_days, np.log10(h2.rl_2), label=r'$R_{L,2}$', linestyle='dashed', color='tab:orange')
 ax2.plot(h2.period_days, np.log10(h2.star_2_radius), label=r'$R_2$', color='tab:orange')
+
+pointsx = [h2.period_days[A], h2.period_days[B], h2.period_days[C], h2.period_days[D]]
+pointsy = [np.log10(h2.star_2_radius[A]), np.log10(h2.star_2_radius[B]), np.log10(h2.star_2_radius[C]), np.log10(h2.star_2_radius[D])]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+
+pointsy = [np.log10(h2.rl_2[A]), np.log10(h2.rl_2[B]), np.log10(h2.rl_2[C]), np.log10(h2.rl_2[D])]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+
+pointsy = [np.log10(h2.star_1_radius[A]), np.log10(h2.star_1_radius[B]), np.log10(h2.star_1_radius[C]), np.log10(h2.star_1_radius[D])]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
 
 ax1.set_xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
 ax2.set_ylabel(r'$\log_{10}$ $R_1/R_{\odot,1}$',fontsize=14)
@@ -207,8 +265,15 @@ plt.rcParams["mathtext.fontset"] = 'cm'
 plt.plot(h2.period_days, h2.star_1_mass, label=r'$\mathrm{Donor}$', color='tab:blue')
 plt.plot(h2.period_days, h2.star_2_mass, label=r'$\mathrm{Accretor}$', color='tab:orange')
 
-plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=25)
-plt.ylabel(r'$M/M_\odot$', fontsize=25)
+pointsx = [h2.period_days[A], h2.period_days[B], h2.period_days[C], h2.period_days[D]]
+pointsy = [h2.star_2_mass[A], h2.star_2_mass[B], h2.star_2_mass[C], h2.star_2_mass[D]]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+
+plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
+plt.ylabel(r'$M/M_\odot$', fontsize=14)
 plt.legend()
 plt.savefig('mvsp.png', bbox_inches='tight')
 plt.show()
@@ -234,6 +299,13 @@ plt.rcParams["mathtext.fontset"] = 'cm'
 ax1.plot(h2.period_days, h.log_Teff, label=r'$\mathrm{Donor}$', color='tab:blue')
 ax2.plot(h2.period_days, h3.log_Teff, label=r'$\mathrm{Accretor}$', color='tab:orange')
 
+pointsx = [h2.period_days[A], h2.period_days[B], h2.period_days[C], h2.period_days[D]]
+pointsy = [h3.log_Teff[A], h3.log_Teff[B], h3.log_Teff[C], h3.log_Teff[D]]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+
 ax1.set_xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
 ax1.set_ylabel(r'$\log$ $T_{\mathrm{eff},1}$ $(\mathrm{K})$', fontsize=14)
 ax2.set_ylabel(r'$\log$ $T_{\mathrm{eff},2}$ $(\mathrm{K})$', fontsize=14)
@@ -247,6 +319,13 @@ plt.figure(figsize=(8,6), dpi=100)
 plt.rcParams["mathtext.fontset"] = 'cm'
 plt.fill_between(h2.period_days, h3.conv_mx1_bot, h3.conv_mx1_top, facecolor='tab:orange')
 
+pointsx = [h2.period_days[A], h2.period_days[B], h2.period_days[C], h2.period_days[D]]
+pointsy = [h3.conv_mx1_top[A], h3.conv_mx1_top[B], h3.conv_mx1_top[C], h3.conv_mx1_top[D]]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
+
 plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
 plt.ylabel(r'$\mathrm{Mass}$ $\mathrm{fraction}$', fontsize=14)
 plt.savefig('conv1.png', bbox_inches='tight')
@@ -255,6 +334,13 @@ plt.show()
 plt.figure(figsize=(8,6), dpi=100)
 plt.rcParams["mathtext.fontset"] = 'cm'
 plt.fill_between(h2.period_days, h3.conv_mx2_bot, h3.conv_mx2_top, facecolor='tab:orange')
+
+pointsx = [h2.period_days[A], h2.period_days[B], h2.period_days[C], h2.period_days[D]]
+pointsy = [h3.conv_mx2_top[A], h3.conv_mx2_top[B], h3.conv_mx2_top[C], h3.conv_mx2_top[D]]
+labels = ['D', 'C', 'B', 'A']
+plt.plot(pointsx, pointsy, '.', color='black')
+for i, txt in enumerate(pointsx):
+    plt.annotate(labels[i], (pointsx[i], pointsy[i]), color='black')
 
 plt.xlabel(r'$P_\mathrm{orb}$ $(\mathrm{days})$',fontsize=14)
 plt.ylabel(r'$\mathrm{Mass}$ $\mathrm{fraction}$', fontsize=14)

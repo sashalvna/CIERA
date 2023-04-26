@@ -11,10 +11,10 @@ m_COs = [0.9, 1.0, 1.1, 1.2, 1.3] #(10**np.linspace(np.log10(0.1), np.log10(0.9)
 
 #read in blue lurker data
 bl = pd.read_csv('bluelurkers.csv')
-bl_id = np.array(bl['WOCS_ID'][4:])
-bl_Teff = np.array(bl['T_eff'][4:])
-bl_logg = np.array(bl['log_g'][4:])
-bl_err = np.array(bl['error'][4:])
+bl_id = np.array(bl['WOCS_ID'][:4])
+bl_Teff = np.array(bl['T_eff'][:4])
+bl_logg = np.array(bl['log_g'][:4])
+bl_err = np.array(bl['error'][:4])
 
 # getting the index number for all stable and no MT runs in the grid
 IC_vals = [grid[i].final_values['interpolation_class']
@@ -25,14 +25,14 @@ no_MT_index = [index for index,item in enumerate(IC_vals) if item == 'no_MT']
 
 # among those not converged runs, read the final MT value for each run
 f = []
-for elems in no_MT_index:
+for elems in stable_MT_index:
     mdot_all = grid[elems].binary_history['lg_mtransfer_rate'][-1]
     max_mdot = max(grid[elems].binary_history['lg_mtransfer_rate'])
     m1_all = grid[elems].binary_history['star_1_mass'][0]
     m2_all = grid[elems].binary_history['star_2_mass'][0]
     p_all = grid[elems].binary_history['period_days'][0]
     p_final = grid[elems].binary_history['period_days'][-1]
-    if p_final < 1000:
+    if p_final > 1000:
         continue
     p_orb = np.log10(grid[elems].binary_history['period_days'])
     wcrit = grid[elems].final_values['S2_surf_avg_omega_div_omega_crit']
@@ -53,7 +53,7 @@ for m_CO in m_COs:
     minm2 = m_CO + 0.01
 
     #get indices of all models in the WRLOF island
-    ind = np.where((f[6] > minm2)&(f[3] > 1000))[0]
+    ind = np.where(f[6] > minm2)[0]
     f = np.transpose(f)
     f1 = f[ind]
     f = np.transpose(f)
@@ -66,8 +66,8 @@ for m_CO in m_COs:
 
     f1 = np.transpose(f1)
     combined = np.concatenate(f[10]) #f1[10][:11])
-    minp = 3.5 #min(combined)
-    maxp = 6 #max(combined)
+    minp = min(combined)
+    maxp = max(combined)
 
     #norm = mpl.colors.Normalize(vmin=minp, vmax=maxp)
     #cmap = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.viridis)
@@ -82,7 +82,7 @@ for m_CO in m_COs:
 
     #plt.figure(figsize=(10, 10))
     for i in range(len(f2)):
-        plt.scatter(f2[i][8], f2[i][7], c=f2[i][10], cmap='viridis', vmin=minp, vmax=maxp, s=5)
+        plt.scatter(f2[i][8], f2[i][7], c=f2[i][10], cmap='viridis', vmin=minp, vmax=maxp, s=10)
     #print(f2[1][1], f2[1][3])
 
     #plt.colorbar(orientation='horizontal', label=r'$P_{orb}$')
@@ -131,9 +131,7 @@ for m_CO in m_COs:
     plt.xlim(xmin, xmax)
     plt.ylim(ymin, ymax)
     #plt.title(r'$M_2 = %.4s M_\odot$'%m_CO, fontsize=16)
-
 plt.colorbar(orientation='horizontal', label=r'$\log$ $P_\mathrm{orb}$ $(\mathrm{days})$')
-#plt.colorbar().set_label(label=r'$\log$ $P_\mathrm{orb}$ $(\mathrm{days})$',size=20)
 plt.clim(minp, maxp)
-plt.savefig('zsolar_plots/hr_zsolarwrlof_highp.png', bbox_inches='tight')
+plt.savefig('zsolar_plots/rlof_hr_zsolarwrlof_lowp.png', bbox_inches='tight')
 plt.show()
